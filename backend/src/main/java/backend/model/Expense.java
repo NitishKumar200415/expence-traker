@@ -18,4 +18,5 @@ public class Expense {
     private String category;
     private String date;
     private String status;
+    private Double score;
 }

@@ -1,8 +1,10 @@
 package backend.service;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import backend.model.Expense;
 import backend.repository.ExpenseRepository;
@@ -18,12 +20,25 @@ public class ExpenseService {
 
     public Expense saveExpense(Expense expense) {
 
-        // 🔥 anomaly logic
-        if (expense.getAmount() > 10000) {
-            expense.setStatus("ANOMALY");
-        } else {
-            expense.setStatus("NORMAL");
-        }
+        // 🔥 Call Python ML API
+        RestTemplate restTemplate = new RestTemplate();
+
+        Map<String, Object> request = Map.of(
+                "amount", expense.getAmount()
+        );
+
+        Map response = restTemplate.postForObject(
+                "http://localhost:5000/predict",
+                request,
+                Map.class
+        );
+
+        // Set result from ML
+        expense.setStatus((String) response.get("status"));
+
+// 👇 NEW
+Double score = Double.valueOf(response.get("score").toString());
+expense.setScore(score);
 
         return repo.save(expense);
     }
